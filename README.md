@@ -49,7 +49,7 @@ cd fronend
 yarn install
 
 # during development
-yarn dev
+yarn start
 
 # build to serve via b4f
 yarn build
