@@ -1,3 +1,14 @@
+## Setup
+
+### Kafka 
+```bash 
+cd kafka 
+docker-compose up -d
+docker-compose down
+docker-compose restart
+docker ps
+```
+
 ### Backend 
 ```bash 
 python3 -m venv venv 
@@ -8,23 +19,20 @@ cd backend
 python3 backend
 ```
 
-### Kafka 
-```bash 
-cd kafka 
-docker-compose up -d
-docker-compose down
-docker-compose restart
-```
 ### Spark
 ```bash 
 pip3 install -r requirements.txt
+python3 spark.py
 ```
 
 ### Frontend
 ```bash
-cd frontend
-flask run
 cd react-fronend
 yarn install
-yarn start
+# we are serving the static build
+yarn build
+
+pip3 install -r requirements.txt
+cd frontend
+python3 flask.py
 ```

@@ -1,15 +1,15 @@
 import logo from './logo.svg';
-import {useEffect, useState} from 'react';
+import { useEffect, useState } from 'react';
 import './App.css';
+import io from 'socket.io-client';
 
 function App() {
 
   const [btcPrice, setBtcPrice] = useState(0);
 
   useEffect(() => {
-    fetch('/btc').then(res => res.json()).then(data => {
-      setBtcPrice(data.price);
-    });
+    const socket = io('http://localhost:5000');
+    socket.on('btc', (data) => setBtcPrice(data.price));
   }, []);
 
   return (
