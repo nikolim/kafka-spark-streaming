@@ -7,7 +7,7 @@ function App() {
   const [btcPrice, setBtcPrice] = useState(0);
 
   useEffect(() => {
-    fetch('/time').then(res => res.json()).then(data => {
+    fetch('/btc').then(res => res.json()).then(data => {
       setBtcPrice(data.price);
     });
   }, []);
