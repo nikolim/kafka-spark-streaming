@@ -4,35 +4,53 @@
 ```bash 
 cd kafka 
 docker-compose up -d
+
+# check if everything is running
+docker ps
+
+# additional commands
 docker-compose down
 docker-compose restart
-docker ps
 ```
 
 ### Backend 
+```bash 
+cd backend
+python3 -m venv venv 
+source venv/bin/activate
+
+pip3 install -r requirements.txt
+python3 backend.py
+```
+
+### Spark
+Note not working yet
 ```bash 
 python3 -m venv venv 
 source venv/bin/activate
 pip3 install -r requirements.txt
 
-cd backend
-python3 backend
+python3 spark.py
 ```
 
-### Spark
-```bash 
+### Backend4Frontend
+```bash
+cd b4f
+python3 -m venv venv 
+source venv/bin/activate
 pip3 install -r requirements.txt
-python3 spark.py
+
+python3 app.py
 ```
 
 ### Frontend
 ```bash
-cd react-fronend
+cd fronend
 yarn install
-# we are serving the static build
-yarn build
 
-pip3 install -r requirements.txt
-cd frontend
-python3 flask.py
+# during development
+yarn dev
+
+# build to serve via b4f
+yarn build
 ```
