@@ -26,6 +26,9 @@ python3 backend.py
 ### Spark
 Note not working yet
 ```bash 
+# might slighty differ on your machine
+export JAVA_HOME=/usr/lib/jvm/java-11-openjdk
+
 python3 -m venv venv 
 source venv/bin/activate
 pip3 install -r requirements.txt

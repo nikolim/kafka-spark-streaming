@@ -38,8 +38,8 @@ df = spark \
     .load()
 
 # write stream to console
-values = df.selectExpr("CAST(value AS STRING)")
-values.writeStream.format("console").start().awaitTermination()
+# values = df.selectExpr("CAST(value AS STRING)")
+# values.writeStream.format("console").start().awaitTermination()
 
 # multiply the values in the stream by 2
 # processed = df.selectExpr("CAST(value AS DOUBLE)").withColumn("value", col("value") * 2)

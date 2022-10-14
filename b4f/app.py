@@ -23,7 +23,7 @@ def send_message(btc_price=curr_btc_price[0]):
 
 
 def consume():
-    consumer = KafkaConsumer('raw', bootstrap_servers='localhost:9092')
+    consumer = KafkaConsumer('processed', bootstrap_servers='localhost:9092')
     for message in consumer:
         curr_btc_price[0] = message.value.decode('utf-8')
         send_message(btc_price=curr_btc_price[0])
