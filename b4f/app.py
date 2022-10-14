@@ -21,28 +21,22 @@ curr_btc_price = [0]
 def send_message(btc_price=curr_btc_price[0]):
     socketio.emit("btc", {'price': btc_price})
 
-
 def consume():
     consumer = KafkaConsumer('processed', bootstrap_servers='localhost:9092')
     for message in consumer:
         curr_btc_price[0] = message.value.decode('utf-8')
         send_message(btc_price=curr_btc_price[0])
 
-
 consume_thread = Thread(target=consume)
 consume_thread.start()
 
-# just for testing
-
-
+# just for testing, not used in production 
 @DeprecationWarning
 @app.route('/btc')
 def get_current_time():
     return {'price': curr_btc_price[0]}
 
 # Serve React App
-
-
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):

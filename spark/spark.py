@@ -7,7 +7,6 @@ conf = SparkConf()
 
 # Note you have to set set spark-home folder
 # export SPARK_HOME=/usr/local/spark
-
 # REMOTE CONFIG (docker-compose)
 # docker inspect spark-master | grep IPAddress -> spark-master ip
 # conf.setAll(
@@ -40,9 +39,6 @@ df = spark \
 # write stream to console
 # values = df.selectExpr("CAST(value AS STRING)")
 # values.writeStream.format("console").start().awaitTermination()
-
-# multiply the values in the stream by 2
-# processed = df.selectExpr("CAST(value AS DOUBLE)").withColumn("value", col("value") * 2)
 
 # write stream to other kafka topic
 df.writeStream \

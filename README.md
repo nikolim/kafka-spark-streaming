@@ -1,59 +1,69 @@
 ## Setup
 
-### Kafka 
+### 0.Virtual environment
+For development we can use a single virtual environment.
+```bash 
+python3 -m venv venv 
+# repeat this step when you open a new terminal or configure the virtual environment in your IDE.
+source venv/bin/activate
+
+# to make sure the virtual environment is activated, check path of the python interpreter
+which python
+```
+
+### 1.Kafka 
+First start the kafka broker. Topics will be created automatically by the library.
 ```bash 
 cd kafka 
 docker-compose up -d
 
 # check if everything is running
+# it might take a couple of seconds
 docker ps
 
-# additional commands
+# stop the broker once you are done
 docker-compose down
+
+# restart if a container crashes
 docker-compose restart
 ```
 
-### Backend 
+### 2.Backend 
+First start the backend to fetch data from an API.
 ```bash 
 cd backend
-python3 -m venv venv 
-source venv/bin/activate
-
 pip3 install -r requirements.txt
 python3 backend.py
 ```
 
-### Spark
-Note not working yet
+### 3.Spark
+Consumes the "raw" topic from the backend, and publishes to the "processed" topic.
 ```bash 
-# might slighty differ on your machine
+# might slighty differ on your machine (run "which java" to see the path)
 export JAVA_HOME=/usr/lib/jvm/java-11-openjdk
 
-python3 -m venv venv 
-source venv/bin/activate
 pip3 install -r requirements.txt
-
 python3 spark.py
 ```
 
-### Backend4Frontend
+### 4.Backend4Frontend
+Create flask server to consume the "processed" data and host the react frontend on http://localhost:5000.
 ```bash
 cd b4f
-python3 -m venv venv 
-source venv/bin/activate
 pip3 install -r requirements.txt
 
 python3 app.py
 ```
 
-### Frontend
-```bash
+### 5.Frontend
+For development you can use "yarn start" to get auto-reloading. If you want to hosted version via b4f, you have to build the project.
+```bas.h
 cd fronend
 yarn install
 
 # during development
 yarn start
 
-# build to serve via b4f
+# build to serve static files via b4f
 yarn build
 ```
