@@ -1,4 +1,23 @@
-## Setup
+## Deployment Setup 
+
+### Start 
+```bash 
+docker-compose up 
+
+# if bitcoin price is 0, try restarting b4f
+docker-compose restart -t 10 b4f
+
+# or use detached mode
+docker-compose up -d 
+```
+Open frontend on http://localhost:5000
+
+### Stop
+```bash 
+docker-compose down # run the command inside this repository
+```
+
+## Local Development Setup
 
 ### 0.Virtual environment
 For development we can use a single virtual environment.
@@ -10,7 +29,6 @@ source venv/bin/activate
 # to make sure the virtual environment is activated, check path of the python interpreter
 which python
 ```
-
 ### 1.Kafka 
 First start the kafka broker. Topics will be created automatically by the library.
 ```bash 
@@ -57,8 +75,8 @@ python3 app.py
 
 ### 5.Frontend
 For development you can use "yarn start" to get auto-reloading. If you want to hosted version via b4f, you have to build the project.
-```bas.h
-cd fronend
+```bash
+cd b4f/fronend
 yarn install
 
 # during development

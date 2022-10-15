@@ -5,7 +5,10 @@ from flask_cors import CORS
 from flask_socketio import SocketIO, emit, send
 from kafka import KafkaConsumer
 
-app = Flask(__name__, static_folder='../frontend/build')
+# check if environment variable is set
+KAFKA_BROKER = os.environ['KAFKA_BROKER']  if "KAFKA_BROKER" in os.environ else "localhost:9092"
+
+app = Flask(__name__, static_folder='./frontend/build')
 
 # wrap app for socketio
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -16,14 +19,14 @@ CORS(app)
 # use array to pass by reference
 curr_btc_price = [0]
 
-
 @socketio.on("message")
 def send_message(btc_price=curr_btc_price[0]):
     socketio.emit("btc", {'price': btc_price})
 
 def consume():
-    consumer = KafkaConsumer('processed', bootstrap_servers='localhost:9092')
+    consumer = KafkaConsumer('processed', bootstrap_servers=KAFKA_BROKER)
     for message in consumer:
+        print("B4F received: " + str(message.value.decode('utf-8')))
         curr_btc_price[0] = message.value.decode('utf-8')
         send_message(btc_price=curr_btc_price[0])
 
