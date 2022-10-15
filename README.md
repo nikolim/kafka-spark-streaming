@@ -1,3 +1,9 @@
+# Spark-Kafka-Streaming
+
+## Architecture 
+
+![architecture](architecture.png)
+
 ## Deployment Setup 
 
 ### Start 
