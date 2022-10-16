@@ -9,18 +9,30 @@
 ### Start 
 ```bash 
 docker-compose up 
-
-# if bitcoin price is 0, try restarting b4f
-docker-compose restart -t 10 b4f
-
-# or use detached mode
-docker-compose up -d 
 ```
 Open frontend on http://localhost:5000
 
-### Stop
+### Detached Mode
 ```bash 
-docker-compose down # run the command inside this repository
+docker-compose up -d # start in detached mode
+docker-compose down # stop all containers
+```
+### Health check 
+```bash 
+docker ps 
+
+# You should see 5 containers
+acaccef1b70a   kafka-spark-streaming-b4f         "python3 -m flask ru…"   3 minutes ago   Up 15 seconds             0.0.0.0:5000->5000/tcp, :::5000->5000/tcp   b4f
+eb3d296e3511   kafka-spark-streaming-spark       "python3 spark.py"       3 minutes ago   Up 15 seconds                                                         spark
+7379ec143bd0   kafka-spark-streaming-backend     "python3 backend.py"     3 minutes ago   Up 15 seconds                                                         backend
+942dc7569d52   confluentinc/cp-kafka:7.0.1       "/etc/confluent/dock…"   3 minutes ago   Up 30 seconds (healthy)   0.0.0.0:9092->9092/tcp, :::9092->9092/tcp   broker
+6eab82fedd86   confluentinc/cp-zookeeper:7.0.1   "/etc/confluent/dock…"   3 minutes ago   Up 54 seconds             2181/tcp, 2888/tcp, 3888/tcp                zookeeper
+
+# restart all containers
+docker-compose restart
+
+# restart failed container e.g b4f
+docker-compose restart -t 10 b4f
 ```
 
 ## Local Development Setup
