@@ -35,13 +35,13 @@ docker-compose restart
 docker-compose restart -t 10 b4f
 ```
 
-## Local Development Setup
+## Local Development Setup (Have a separate terminal for every step!)
 
 ### 0.Virtual environment
 For development we can use a single virtual environment.
 ```bash 
 python3 -m venv venv 
-# repeat this step when you open a new terminal or configure the virtual environment in your IDE.
+# repeat this step everyttime you open a new terminal or configure the virtual environment in your IDE.
 source venv/bin/activate
 
 # to make sure the virtual environment is activated, check path of the python interpreter
@@ -75,6 +75,9 @@ python3 backend.py
 ### 3.Spark
 Consumes the "raw" topic from the backend, and publishes to the "processed" topic.
 ```bash 
+
+cd spark
+
 # might slighty differ on your machine (run "which java" to see the path)
 export JAVA_HOME=/usr/lib/jvm/java-11-openjdk
 
