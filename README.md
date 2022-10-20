@@ -48,6 +48,12 @@ source venv/bin/activate
 which python
 ```
 ### 1.Kafka 
+*Optional: you might have to kill existing containers which are using zookeeper
+```bash 
+docker container ls -a
+docker kill <container-id>
+```
+
 First start the kafka broker. Topics will be created automatically by the library.
 ```bash 
 cd kafka 
