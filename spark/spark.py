@@ -16,7 +16,7 @@ conf.setAll(
 )
 
 spark = SparkSession.builder.config(conf=conf).getOrCreate()
-
+# read stream to kafka broker
 df = spark \
     .readStream \
     .format("kafka") \
@@ -29,7 +29,7 @@ values = df.selectExpr("CAST(value AS STRING)")
 
 values.writeStream.format("console").start()
 
-# write stream to other kafka topic
+# write stream to other kafka topic (publish to broker)
 df.writeStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", KAFKA_BROKER) \
