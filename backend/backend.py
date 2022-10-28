@@ -28,6 +28,7 @@ def send_to_kafka():
 	while True:
 		future = producer.send('raw', str(data_dict).encode('utf-8'))
 		future.get(timeout=60)
+		logging.info("Sent to kafka: {}".format(data_dict))
 		sleep(1/FREQUNCY)
 
 def get_btc_price():
