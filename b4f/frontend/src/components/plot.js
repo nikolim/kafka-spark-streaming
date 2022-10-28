@@ -3,49 +3,40 @@ import Chart from "react-apexcharts";
 
 const ApexChart = ({ data }) => {
 
-	console.log(data);
+	return (
+		<div>
+			<Chart
+				type="area"
+				height={800}
+				width={1200}
+				series={[
+					{
+						name: "BTC",
+						data: data
+					}
+				]}
 
-	useEffect(() => {
-		// ApexCharts.exec('realtime', 'updateSeries', [{
-		// 	data: data
-		//   }])
-	}, [data]);
+				options={{
+					chart: {
+						toolbar: {
+							show: false
+						},
 
+					},
+					colors: ['#004DCF'],
+					stroke: { width: 1, curve: 'smooth' },
+					dataLabels: { enabled: false },
+					xaxis: {
+					    show: false,
 
-    return (
-        <div>
-            <Chart
-                type="area"
-                height={300}
-                width='100%'
-                series={[
-                    {
-                        name: "BTC",
-                        data: data
-                    }
-                ]}
-
-                options={{
-                    chart: {
-                        toolbar: {
-                            show: false
-                        },
-
-                    },
-                    colors: ['#f90000'],
-                    stroke: { width: 1, curve: 'smooth' },
-                    dataLabels: { enabled: false },
-                    // xaxis: {
-                    //     categories: data?.map(data => data.time),
-
-                    // },
-                    yaxis: {
-                        show: false,
-                    }
-                }}
-            />
-        </div>
-    )
+					},
+					yaxis: {
+						show: true,
+					}
+				}}
+			/>
+		</div>
+	)
 }
 
 export default ApexChart

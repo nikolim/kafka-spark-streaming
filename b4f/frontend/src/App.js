@@ -14,14 +14,13 @@ function App() {
 
   useEffect(() => {
     const socket = io('http://localhost:5000');
-      socket.on('btc', (data) => appendBtcPrice(JSON.parse(data.price)["btc_price"])
+      socket.on('btc', (data) => appendBtcPrice(data.price)
     )}
    ,[]);
 
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
         <Plot data={btcPrices} />
       </header>
     </div>

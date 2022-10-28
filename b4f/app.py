@@ -1,4 +1,5 @@
 import os
+import json
 from threading import Thread
 from flask import Flask, send_from_directory
 from flask_cors import CORS
@@ -26,9 +27,8 @@ def send_message(btc_price=curr_btc_price[0]):
 def consume():
     consumer = KafkaConsumer('processed', bootstrap_servers=KAFKA_BROKER)
     for message in consumer:
-        print("B4F received: " + str(message.value.decode('utf-8')))
-        curr_btc_price[0] = message.value.decode('utf-8')
-        send_message(btc_price=curr_btc_price[0])
+        data_obj = json.loads(str(message.value.decode('utf-8')).replace("\'", "\""))
+        send_message(btc_price=data_obj['btc_price'])
 
 consume_thread = Thread(target=consume)
 consume_thread.start()
