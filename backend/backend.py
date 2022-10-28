@@ -17,7 +17,7 @@ binanceAPI = "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT"
 # endpoint to get bitcoin hashrate
 blockchainAPI = "https://blockchain.info/q/hashrate"
 
-FREQUNCY = 10
+FREQUNCY = 1
 
 producer = KafkaProducer(bootstrap_servers=KAFKA_BROKER)
 

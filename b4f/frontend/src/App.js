@@ -7,16 +7,15 @@ function App() {
   const [btcPrices, setBtcPrices] = useState([]);
   const [hashRates, setHashRates] = useState([]);
 
-  const appendBtcPrice = (price) => setBtcPrices((prices) => [...prices, price].slice(0, 100));
-  const appendHashRate = (hashRate) => setHashRates((hashRates) => [...hashRates, hashRate].slice(0, 100));
+  const appendBtcPrice = (price) => setBtcPrices((prices) => [...prices, price].slice(-20));
+  const appendHashRate = (hashRate) => setHashRates((hashRates) => [...hashRates, hashRate].slice(-20));
 
   useEffect(() => {
     const socket = io('http://localhost:5000');
     socket.on('btc', (data) => {
       appendBtcPrice(data.price);
       appendHashRate(data.hash_rate);
-      console.log(data);
-    }
+      }
     )
   }, []);
 
