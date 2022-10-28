@@ -5,17 +5,20 @@ import io from 'socket.io-client';
 function App() {
 
   const [btcPrices, setBtcPrices] = useState([]);
+  const [hashRates, setHashRates] = useState([]);
 
-  const appendBtcPrice = (price) => {
-    setBtcPrices((prices) => [price, ...prices].slice(0, 100));
-  };
+  const appendBtcPrice = (price) => setBtcPrices((prices) => [...prices, price].slice(0, 100));
+  const appendHashRate = (hashRate) => setHashRates((hashRates) => [...hashRates, hashRate].slice(0, 100));
 
   useEffect(() => {
     const socket = io('http://localhost:5000');
-    socket.on('btc', (data) => appendBtcPrice(data.price)
+    socket.on('btc', (data) => {
+      appendBtcPrice(data.price);
+      appendHashRate(data.hash_rate);
+      console.log(data);
+    }
     )
-  }
-    , []);
+  }, []);
 
 
   return (
@@ -29,8 +32,8 @@ function App() {
         </div>
         <div className="flex flex-col items-center max-w-[30%]">
           <h1 className="text-4xl text-white"> Hashrate </h1>
-          <Plot data={btcPrices} color={"#7b1fa2"} />
-          <div className="text-xl text-white"> {btcPrices[btcPrices.length - 1]} hash/unit</div>
+          <Plot data={hashRates} color={"#7b1fa2"} />
+          <div className="text-xl text-white"> {hashRates[hashRates.length - 1]} hash/unit</div>
         </div>
         <div className="flex flex-col items-center max-w-[30%]">
           <h1 className="text-4xl text-white"> Correlation </h1>
