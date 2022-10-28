@@ -1,17 +1,16 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import Chart from "react-apexcharts";
 
-const ApexChart = ({ data }) => {
+const ApexChart = ({ data, color }) => {
 
 	return (
 		<div>
 			<Chart
 				type="area"
-				height={800}
-				width={1200}
+				height={300}
+				width={500}
 				series={[
 					{
-						name: "BTC",
 						data: data
 					}
 				]}
@@ -23,11 +22,11 @@ const ApexChart = ({ data }) => {
 						},
 
 					},
-					colors: ['#004DCF'],
+					colors: [color],
 					stroke: { width: 1, curve: 'smooth' },
 					dataLabels: { enabled: false },
 					xaxis: {
-					    show: false,
+						show: false,
 
 					},
 					yaxis: {
@@ -39,4 +38,4 @@ const ApexChart = ({ data }) => {
 	)
 }
 
-export default ApexChart
+export default ApexChart;
