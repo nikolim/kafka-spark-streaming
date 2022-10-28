@@ -3,6 +3,9 @@ from pyspark import SparkConf
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
+from pyspark.sql.functions import from_json, corr, lit
+from pyspark.sql.types import StructType, StringType, IntegerType, DoubleType
+
 
 KAFKA_BROKER = os.environ['KAFKA_BROKER'] if "KAFKA_BROKER" in os.environ else "localhost:9092"
 
@@ -24,10 +27,16 @@ df = spark \
     .option("subscribe", "raw") \
     .load()
 
-# write stream to console
-values = df.selectExpr("CAST(value AS STRING)")
+# to create a DF out of a json object, we need a schema 
+schema = StructType().add('btc_price', DoubleType(), False).add('hash_rate', DoubleType(), False)
+df_casted = df.selectExpr('CAST(value AS STRING)').select(from_json('value', schema).alias('temp')).select('temp.*')
+# df_casted = df.selectExpr('CAST(value AS DOUBLE)')
 
-values.writeStream.format("console").start()
+# add col and calculate corr
+df_casted.withColumn('correlation',  lit(df_casted.stat.corr('btc_price', 'hash_rate'))).show()
+
+# write stream to console
+#df_corr.writeStream.format("console").start()
 
 # write stream to other kafka topic (publish to broker)
 df.writeStream \
