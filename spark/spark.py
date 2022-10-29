@@ -3,7 +3,7 @@ from pyspark import SparkConf
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
-from pyspark.sql.functions import from_json, corr, lit
+from pyspark.sql.functions import from_json, corr, lit, to_json
 from pyspark.sql.types import StructType, DoubleType
 import pyspark.sql.functions as F
 
@@ -37,6 +37,9 @@ df_casted = df.selectExpr('CAST(value AS STRING)').select(from_json('value', sch
 def compute_correlation(df, id):
     df.withColumn("corr", lit(df.corr("btc_price", "hash_rate"))).show()
 
+    # CONVERT BACK TO JSON HERE
+
+
 df_casted.writeStream \
     .foreachBatch(compute_correlation) \
     .format("kafka") \
@@ -49,7 +52,11 @@ df_casted.writeStream \
 
 # return df with the avatage bitcoin price every 10 seconds
 def compute_avarage(df, id):
-    df.select(avg('btc_price')).show()
+    resDF = df.select(avg('btc_price')).show()
+
+    # CONVERT BACK TO JSON HERE
+
+    #resDF.select(to_json(struct($"battery_level", "c02_level")).alias("value"))
 
 df_casted.writeStream \
     .foreachBatch(compute_avarage) \
