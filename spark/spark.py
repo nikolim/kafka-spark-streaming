@@ -5,6 +5,7 @@ from pyspark.sql.functions import *
 from pyspark.sql.types import *
 from pyspark.sql.functions import from_json, corr, lit
 from pyspark.sql.types import StructType, StringType, IntegerType, DoubleType
+import pyspark.sql.functions as F
 
 
 KAFKA_BROKER = os.environ['KAFKA_BROKER'] if "KAFKA_BROKER" in os.environ else "localhost:9092"
@@ -32,11 +33,21 @@ schema = StructType().add('btc_price', DoubleType(), False).add('hash_rate', Dou
 df_casted = df.selectExpr('CAST(value AS STRING)').select(from_json('value', schema).alias('temp')).select('temp.*')
 # df_casted = df.selectExpr('CAST(value AS DOUBLE)')
 
+def processRow(df, id):
+    #print("rad", df)
+    print("df typ", type(df))
+    print("btc price type", type(df['btc_price']))
+    df.withColumn("corr", lit(df.corr("btc_price", "hash_rate"))).show()
+    #print(corr)
+    #df.withColumn('correlation', lit(df.corr('btc_price', 'hash_rate')))
+    #print(corr_value)ç
+#    return df
+
 # add col and calculate corr
-df_casted.withColumn('correlation',  lit(df_casted.stat.corr('btc_price', 'hash_rate'))).show()
+df_casted.writeStream.foreachBatch(processRow).start() #('correlation', corr_value).start()  #lit(df_casted.stat.corr('btc_price', 'hash_rate'))).show()
 
 # write stream to console
-#df_corr.writeStream.format("console").start()
+df_casted.writeStream.format("console").start()
 
 # write stream to other kafka topic (publish to broker)
 df.writeStream \
