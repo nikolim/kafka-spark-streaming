@@ -41,13 +41,20 @@ def processRow(df, id):
     #print(corr)
     #df.withColumn('correlation', lit(df.corr('btc_price', 'hash_rate')))
     #print(corr_value)ç
-#    return df
+    return df
 
 # add col and calculate corr
-df_casted.writeStream.foreachBatch(processRow).start() #('correlation', corr_value).start()  #lit(df_casted.stat.corr('btc_price', 'hash_rate'))).show()
+df_casted_2 =df_casted.writeStream.foreachBatch(processRow).start() #('correlation', corr_value).start()  #lit(df_casted.stat.corr('btc_price', 'hash_rate'))).show()
+
+
+# Previous try. Didn't work. Need to add writeStream to actually write to the stream
+# df_casted.withColumn("corr", df_casted.corr("btc_price", "hash_rate")).show()
+
+# But this works?
+#df_casted = df_casted.withColumn("corr", col('btc_price')+100)
 
 # write stream to console
-df_casted.writeStream.format("console").start()
+df_casted_2.writeStream.format("console").start()
 
 # write stream to other kafka topic (publish to broker)
 df.writeStream \
