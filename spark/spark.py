@@ -38,18 +38,23 @@ def compute_correlation(df, id):
     df.withColumn("corr", lit(df.corr("btc_price", "hash_rate"))).show()
 
     # CONVERT BACK TO JSON HERE
+
    # df.select(to_json("corr".cast("string"), schema).alias("value"))
    # df.show()
 
+# Remove these comments if you wanna run
+#df_casted.writeStream \
+#    .foreachBatch(compute_correlation).start()
 
+# Add comments to line 50-57 if you wanna run
 df_casted.writeStream \
-    .foreachBatch(compute_correlation).start()
-   # .format("kafka") \
-   # .option("kafka.bootstrap.servers", KAFKA_BROKER) \
-   # .option("topic", "processed") \
-   # .option("checkpointLocation", "/tmp/checkpoint") \
-   # .start() \
-   # .awaitTermination()
+    .foreachBatch(compute_correlation) \
+    .format("kafka") \
+    .option("kafka.bootstrap.servers", KAFKA_BROKER) \
+    .option("topic", "processed") \
+    .option("checkpointLocation", "/tmp/checkpoint") \
+    .start() \
+    .awaitTermination()
 
 
 # return df with the avatage bitcoin price every 10 seconds
@@ -58,20 +63,32 @@ def compute_avarage(df, id):
 
     # CONVERT BACK TO JSON HERE
     #df.select(to_json("avg('btc_price)".cast("string"), schema).alias("value"))
-
     #resDF.select(to_json(struct($"battery_level", "c02_level")).alias("value"))
 
+
+# Remove these comments if you wanna run
+#df_casted.writeStream \
+#    .foreachBatch(compute_avarage) \
+#    .trigger(processingTime='10 seconds').start()
+
+# Add comments to line 76-84 if you wanna run
 df_casted.writeStream \
     .foreachBatch(compute_avarage) \
-    .trigger(processingTime='10 seconds').start()
-  #  .format("kafka") \
-  #  .option("kafka.bootstrap.servers", KAFKA_BROKER) \
-  #  .option("topic", "processed") \
-  #  .option("checkpointLocation", "/tmp/checkpoint") \
-  #  .start() \
-  #  .awaitTermination()
+    .trigger(processingTime='10 seconds') \
+    .format("kafka") \
+    .option("kafka.bootstrap.servers", KAFKA_BROKER) \
+    .option("topic", "processed") \
+    .option("checkpointLocation", "/tmp/checkpoint") \
+    .start() \
+    .awaitTermination()
+
+
+
+
+
 
 # write stream to other kafka topic (publish to broker)
+# this works
 df.writeStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", KAFKA_BROKER) \
