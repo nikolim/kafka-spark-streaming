@@ -4,7 +4,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
 from pyspark.sql.functions import from_json, corr, lit
-from pyspark.sql.types import StructType, StringType, IntegerType, DoubleType
+from pyspark.sql.types import StructType, DoubleType
 import pyspark.sql.functions as F
 
 
@@ -20,7 +20,8 @@ conf.setAll(
 )
 
 spark = SparkSession.builder.config(conf=conf).getOrCreate()
-# read stream to kafka broker
+
+# read stream from kafka broker
 df = spark \
     .readStream \
     .format("kafka") \
@@ -31,30 +32,34 @@ df = spark \
 # to create a DF out of a json object, we need a schema 
 schema = StructType().add('btc_price', DoubleType(), False).add('hash_rate', DoubleType(), False)
 df_casted = df.selectExpr('CAST(value AS STRING)').select(from_json('value', schema).alias('temp')).select('temp.*')
-# df_casted = df.selectExpr('CAST(value AS DOUBLE)')
-
-def processRow(df, id):
-    #print("rad", df)
-    print("df typ", type(df))
-    print("btc price type", type(df['btc_price']))
-    df.withColumn("corr", lit(df.corr("btc_price", "hash_rate"))).show()
-    #print(corr)
-    #df.withColumn('correlation', lit(df.corr('btc_price', 'hash_rate')))
-    #print(corr_value)ç
-    return df
 
 # add col and calculate corr
-df_casted_2 =df_casted.writeStream.foreachBatch(processRow).start() #('correlation', corr_value).start()  #lit(df_casted.stat.corr('btc_price', 'hash_rate'))).show()
+def compute_correlation(df, id):
+    df.withColumn("corr", lit(df.corr("btc_price", "hash_rate"))).show()
+
+df_casted.writeStream \
+    .foreachBatch(compute_correlation) \
+    .format("kafka") \
+    .option("kafka.bootstrap.servers", KAFKA_BROKER) \
+    .option("topic", "processed") \
+    .option("checkpointLocation", "/tmp/checkpoint") \
+    .start() \
+    .awaitTermination()
 
 
-# Previous try. Didn't work. Need to add writeStream to actually write to the stream
-# df_casted.withColumn("corr", df_casted.corr("btc_price", "hash_rate")).show()
+# return df with the avatage bitcoin price every 10 seconds
+def compute_avarage(df, id):
+    df.select(avg('btc_price')).show()
 
-# But this works?
-#df_casted = df_casted.withColumn("corr", col('btc_price')+100)
-
-# write stream to console
-df_casted_2.writeStream.format("console").start()
+df_casted.writeStream \
+    .foreachBatch(compute_avarage) \
+    .trigger(processingTime='10 seconds') \
+    .format("kafka") \
+    .option("kafka.bootstrap.servers", KAFKA_BROKER) \
+    .option("topic", "processed") \
+    .option("checkpointLocation", "/tmp/checkpoint") \
+    .start() \
+    .awaitTermination()
 
 # write stream to other kafka topic (publish to broker)
 df.writeStream \
@@ -63,3 +68,38 @@ df.writeStream \
     .option("topic", "processed") \
     .option("checkpointLocation", "/tmp/checkpoint") \
     .start().awaitTermination()
+
+
+
+'''
+
+ OLD CODE
+
+def aggData(df, id):
+    df.groupBy(
+    window(df.timestamp, "10 seconds", "5 seconds"),
+    df.value).show()
+
+df2.writeStream.foreachBatch(aggData).start()
+# df_casted = df.selectExpr('CAST(value AS DOUBLE)')
+#df2 = df_casted \
+#    .withWatermark("timestamp", "10 seconds") \
+#    .select(avg('btc_price')).collect()
+   # df2.withColumn("id", monotonically_increasing_id())
+    #df.withColumn("id", monotonically_increasing_id())
+
+# Previous try. Didn't work. Need to add writeStream to actually write to the stream
+# df_casted.withColumn("corr", df_casted.corr("btc_price", "hash_rate")).show()
+
+# But this works?
+#df_casted = df_casted.withColumn("corr", col('btc_price')+100)
+
+# write stream to console
+#df_hej.writeStream.format("console").start()
+    #print(corr)
+    #df.withColumn('correlation', lit(df.corr('btc_price', 'hash_rate')))
+    #print(corr_value)ç
+
+    #('correlation', corr_value).start()  #lit(df_casted.stat.corr('btc_price', 'hash_rate'))).show()
+
+ '''
