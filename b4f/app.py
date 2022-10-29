@@ -1,4 +1,5 @@
 import os
+import json
 from threading import Thread
 from flask import Flask, send_from_directory
 from flask_cors import CORS
@@ -17,27 +18,20 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 CORS(app)
 
 # use array to pass by reference
-curr_btc_price = [0]
+data_dict = {"btc_price": 0, "hash_rate": 0}
 
 @socketio.on("message")
-def send_message(btc_price=curr_btc_price[0]):
-    socketio.emit("btc", {'price': btc_price})
+def send_message(btc_price=data_dict['btc_price'], btc_hash_rate=data_dict['hash_rate']):
+    socketio.emit("btc", {'price': btc_price, 'hash_rate': btc_hash_rate})
 
 def consume():
     consumer = KafkaConsumer('processed', bootstrap_servers=KAFKA_BROKER)
     for message in consumer:
-        print("B4F received: " + str(message.value.decode('utf-8')))
-        curr_btc_price[0] = message.value.decode('utf-8')
-        send_message(btc_price=curr_btc_price[0])
+        data_obj = json.loads(str(message.value.decode('utf-8')).replace("\'", "\""))
+        send_message(btc_price=data_obj['btc_price'], btc_hash_rate=data_obj['hash_rate'])
 
 consume_thread = Thread(target=consume)
 consume_thread.start()
-
-# just for testing, not used in production 
-@DeprecationWarning
-@app.route('/btc')
-def get_current_time():
-    return {'price': curr_btc_price[0]}
 
 # Serve React App
 @app.route('/', defaults={'path': ''})
