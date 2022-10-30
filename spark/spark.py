@@ -41,16 +41,31 @@ def compute_avarage(df, id):
 # write stream to console
 df_casted.writeStream \
     .foreachBatch(compute_correlation) \
-    .trigger(processingTime='1 minute').start()
+    .trigger(processingTime='10 seconds').start()
 
 df_casted.writeStream \
     .foreachBatch(compute_avarage) \
-    .trigger(processingTime='1 minute').start()
+    .trigger(processingTime='10 seconds').start()
+
+# add a watermark to the stream
+# df_casted = df_casted.withWatermark("event_time", "1 minute")
+
+# reduce by window and compute correlation
+# df_casted \
+#     .groupBy(window("event_time", "1 minute"), "event_time") \
+#     .agg(corr("btc_price", "hash_rate").alias("corr"), avg("btc_price").alias("avg")) \
+#     .selectExpr("to_json(struct(*)) AS value") \
+#     .writeStream \
+#     .format("kafka") \
+#     .option("kafka.bootstrap.servers", KAFKA_BROKER) \
+#     .option("topic", "processed") \
+#     .option("checkpointLocation", "/tmp/checkpoint1") \
+#     .start().awaitTermination()
 
 df_casted.selectExpr("to_json(struct(*)) AS value") \
     .writeStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", KAFKA_BROKER) \
     .option("topic", "processed") \
-    .option("checkpointLocation", "/tmp/checkpoint") \
+    .option("checkpointLocation", "/tmp/checkpoint1") \
     .start().awaitTermination()
