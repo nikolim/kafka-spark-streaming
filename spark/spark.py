@@ -29,27 +29,34 @@ df = spark \
     .option("subscribe", "raw") \
     .load()
 
+
 # to create a DF out of a json object, we need a schema 
 schema = StructType().add('btc_price', DoubleType(), False).add('hash_rate', DoubleType(), False)
-df_casted = df.selectExpr('CAST(value AS STRING)').select(from_json('value', schema).alias('temp')).select('temp.*')
+df_casted = df.selectExpr('CAST(value AS STRING)').select(from_json('value', schema).alias('temp')).select('temp.*').withColumn("corr", lit(df.corr("btc_price", "hash_rate"))).show()
 
+
+print(type(df_casted))
 # add col and calculate corr
 def compute_correlation(df, id):
-    df.withColumn("corr", lit(df.corr("btc_price", "hash_rate"))).show()
-
+    df_corr = df.withColumn("corr", lit(df.corr("btc_price", "hash_rate")))
+    df_corr.show()
+    df.selectExpr("to_json(struct(*)) AS value").show()
+    
+    df.writeStream \
+    .format("kafka") \
+    .option("kafka.bootstrap.servers", KAFKA_BROKER) \
+    .option("topic", "processed") \
+    .option("checkpointLocation", "/tmp/checkpoint") \
+    .start().awaitTermination()
+   
+   
     # CONVERT BACK TO JSON HERE
    # df.select(to_json("corr".cast("string"), schema).alias("value"))
    # df.show()
 
 
-df_casted.writeStream \
-    .foreachBatch(compute_correlation).start()
-   # .format("kafka") \
-   # .option("kafka.bootstrap.servers", KAFKA_BROKER) \
-   # .option("topic", "processed") \
-   # .option("checkpointLocation", "/tmp/checkpoint") \
-   # .start() \
-   # .awaitTermination()
+#df_casted.writeStream \
+ #   .foreachBatch(compute_correlation).start()
 
 
 # return df with the avatage bitcoin price every 10 seconds
@@ -72,6 +79,8 @@ df_casted.writeStream \
   #  .awaitTermination()
 
 # write stream to other kafka topic (publish to broker)
+
+''''
 df.writeStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", KAFKA_BROKER) \
@@ -79,9 +88,6 @@ df.writeStream \
     .option("checkpointLocation", "/tmp/checkpoint") \
     .start().awaitTermination()
 
-
-
-'''
 
  OLD CODE
 
