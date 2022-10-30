@@ -6,6 +6,8 @@ from pyspark.sql.types import *
 from pyspark.sql.functions import from_json, corr, lit, to_json
 from pyspark.sql.types import StructType, DoubleType
 import pyspark.sql.functions as F
+from pyspark.sql.window import Window
+
 
 
 KAFKA_BROKER = os.environ['KAFKA_BROKER'] if "KAFKA_BROKER" in os.environ else "localhost:9092"
@@ -31,94 +33,22 @@ df = spark \
 
 
 # to create a DF out of a json object, we need a schema 
-schema = StructType().add('btc_price', DoubleType(), False).add('hash_rate', DoubleType(), False)
+schema = StructType().add('btc_price', DoubleType(), False).add('hash_rate', DoubleType(), False).add('timestamp', TimestampType(), False)
 df_casted = df.selectExpr('CAST(value AS STRING)').select(from_json('value', schema).alias('temp')).select('temp.*')
 
+df_casted = df_casted.withColumn('doubled_btc_price', col('btc_price') * 2)
 
-print(type(df_casted))
-# add col and calculate corr
-def compute_correlation(df, id):
-    df_corr = df.withColumn("corr", lit(df.corr("btc_price", "hash_rate")))
+# create a moving window
+# window = Window.partitionBy().orderBy('timestamp').rowsBetween(-10, 0)
 
-    df_corr.selectExpr("to_json(struct(*)) AS value")
-    print(type(df_corr))
-    
-    query = df_corr.writeStream \
-    .format("kafka") \
-    .option("kafka.bootstrap.servers", KAFKA_BROKER) \
-    .option("topic", "processed") \
-    .option("checkpointLocation", "/tmp/checkpoint") \
-    .start()
-
-    query.awaitTermination()
-   
-   
-    # CONVERT BACK TO JSON HERE
-   # df.select(to_json("corr".cast("string"), schema).alias("value"))
-   # df.show()
+# calculate the average btc price over the last 10 seconds
+# df_casted = df_casted.withColumn('avg_btc_price', F.avg('btc_price').over(window))
 
 
-df_casted.writeStream \
-   .foreachBatch(compute_correlation).start()
-
-
-# return df with the avatage bitcoin price every 10 seconds
-def compute_avarage(df, id):
-    df.select(avg('btc_price')).show()
-
-    # CONVERT BACK TO JSON HERE
-    #df.select(to_json("avg('btc_price)".cast("string"), schema).alias("value"))
-
-    #resDF.select(to_json(struct($"battery_level", "c02_level")).alias("value"))
-
-df_casted.writeStream \
-    .foreachBatch(compute_avarage) \
-    .trigger(processingTime='10 seconds').start()
-  #  .format("kafka") \
-  #  .option("kafka.bootstrap.servers", KAFKA_BROKER) \
-  #  .option("topic", "processed") \
-  #  .option("checkpointLocation", "/tmp/checkpoint") \
-  #  .start() \
-  #  .awaitTermination()
-
-# write stream to other kafka topic (publish to broker)
-
-
-df.writeStream \
+df_casted.selectExpr("to_json(struct(*)) AS value") \
+    .writeStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", KAFKA_BROKER) \
     .option("topic", "processed") \
     .option("checkpointLocation", "/tmp/checkpoint") \
     .start().awaitTermination()
-
-''''
- OLD CODE
-
-def aggData(df, id):
-    df.groupBy(
-    window(df.timestamp, "10 seconds", "5 seconds"),
-    df.value).show()
-
-df2.writeStream.foreachBatch(aggData).start()
-# df_casted = df.selectExpr('CAST(value AS DOUBLE)')
-#df2 = df_casted \
-#    .withWatermark("timestamp", "10 seconds") \
-#    .select(avg('btc_price')).collect()
-   # df2.withColumn("id", monotonically_increasing_id())
-    #df.withColumn("id", monotonically_increasing_id())
-
-# Previous try. Didn't work. Need to add writeStream to actually write to the stream
-# df_casted.withColumn("corr", df_casted.corr("btc_price", "hash_rate")).show()
-
-# But this works?
-#df_casted = df_casted.withColumn("corr", col('btc_price')+100)
-
-# write stream to console
-#df_hej.writeStream.format("console").start()
-    #print(corr)
-    #df.withColumn('correlation', lit(df.corr('btc_price', 'hash_rate')))
-    #print(corr_value)ç
-
-    #('correlation', corr_value).start()  #lit(df_casted.stat.corr('btc_price', 'hash_rate'))).show()
-
- '''

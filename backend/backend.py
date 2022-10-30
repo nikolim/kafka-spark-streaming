@@ -1,6 +1,6 @@
 import os
 import requests
-from time import sleep
+from time import sleep, time
 
 from kafka import KafkaProducer
 from concurrent.futures import ThreadPoolExecutor
@@ -22,10 +22,11 @@ FREQUNCY = 1
 producer = KafkaProducer(bootstrap_servers=KAFKA_BROKER)
 
 # data dict to store the most recent values
-data_dict = {"btc_price": 0, "hash_rate": 0}
+data_dict = {"btc_price": 0, "hash_rate": 0, "timestamp": time()}
 
 def send_to_kafka():
 	while True:
+		data_dict['timestamp'] = time()
 		future = producer.send('raw', str(data_dict).encode('utf-8'))
 		future.get(timeout=60)
 		logging.info("Sent to kafka: {}".format(data_dict))
