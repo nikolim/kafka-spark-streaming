@@ -26,7 +26,7 @@ const ApexChart = ({ data, color }) => {
 					stroke: { width: 1, curve: 'smooth' },
 					dataLabels: { enabled: false },
 					xaxis: {
-						show: false,
+						show: true,
 
 					},
 					yaxis: {
