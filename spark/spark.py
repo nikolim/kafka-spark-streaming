@@ -32,22 +32,25 @@ df = spark \
 
 # to create a DF out of a json object, we need a schema 
 schema = StructType().add('btc_price', DoubleType(), False).add('hash_rate', DoubleType(), False)
-df_casted = df.selectExpr('CAST(value AS STRING)').select(from_json('value', schema).alias('temp')).select('temp.*').withColumn("corr", lit(df.corr("btc_price", "hash_rate"))).show()
+df_casted = df.selectExpr('CAST(value AS STRING)').select(from_json('value', schema).alias('temp')).select('temp.*')
 
 
 print(type(df_casted))
 # add col and calculate corr
 def compute_correlation(df, id):
     df_corr = df.withColumn("corr", lit(df.corr("btc_price", "hash_rate")))
-    df_corr.show()
-    df.selectExpr("to_json(struct(*)) AS value").show()
+
+    df_corr.selectExpr("to_json(struct(*)) AS value")
+    print(type(df_corr))
     
-    df.writeStream \
+    query = df_corr.writeStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", KAFKA_BROKER) \
     .option("topic", "processed") \
     .option("checkpointLocation", "/tmp/checkpoint") \
-    .start().awaitTermination()
+    .start()
+
+    query.awaitTermination()
    
    
     # CONVERT BACK TO JSON HERE
@@ -55,8 +58,8 @@ def compute_correlation(df, id):
    # df.show()
 
 
-#df_casted.writeStream \
- #   .foreachBatch(compute_correlation).start()
+df_casted.writeStream \
+   .foreachBatch(compute_correlation).start()
 
 
 # return df with the avatage bitcoin price every 10 seconds
@@ -80,7 +83,7 @@ df_casted.writeStream \
 
 # write stream to other kafka topic (publish to broker)
 
-''''
+
 df.writeStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", KAFKA_BROKER) \
@@ -88,7 +91,7 @@ df.writeStream \
     .option("checkpointLocation", "/tmp/checkpoint") \
     .start().awaitTermination()
 
-
+''''
  OLD CODE
 
 def aggData(df, id):
