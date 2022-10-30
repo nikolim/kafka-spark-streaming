@@ -1,6 +1,7 @@
 import os
+import random
 import requests
-from time import sleep
+from time import sleep, time
 
 from kafka import KafkaProducer
 from concurrent.futures import ThreadPoolExecutor
@@ -22,10 +23,11 @@ FREQUNCY = 1
 producer = KafkaProducer(bootstrap_servers=KAFKA_BROKER)
 
 # data dict to store the most recent values
-data_dict = {"btc_price": 0, "hash_rate": 0}
+data_dict = {"btc_price": 0, "hash_rate": 0, "event_time": time()}
 
 def send_to_kafka():
 	while True:
+		data_dict['event_time'] = time()
 		future = producer.send('raw', str(data_dict).encode('utf-8'))
 		future.get(timeout=60)
 		logging.info("Sent to kafka: {}".format(data_dict))
@@ -40,7 +42,8 @@ def get_btc_price():
 def get_hash_rate():
 	while True:
 		r = requests.get(blockchainAPI)
-		data_dict['hash_rate'] = float(r.json())
+		rand_int = random.randint(-1000, 1000)		
+		data_dict['hash_rate'] = float(r.json()) + rand_int
 		sleep(1/FREQUNCY)
 
 if __name__ == "__main__":

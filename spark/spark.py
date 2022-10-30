@@ -27,10 +27,28 @@ df = spark \
 # write stream to console
 values = df.selectExpr("CAST(value AS STRING)")
 
-values.writeStream.format("console").start()
+schema = StructType().add('btc_price', DoubleType(), False).add('hash_rate', DoubleType(), False).add('event_time', DoubleType(), False)
+df_casted = df.selectExpr('CAST(value AS STRING)').select(from_json('value', schema).alias('temp')).select('temp.*')
 
-# write stream to other kafka topic
-df.writeStream \
+df_casted = df_casted.withColumn('event_time', current_timestamp())
+
+def compute_correlation(df, id):
+    df.withColumn("corr", lit(df.corr("btc_price", "hash_rate"))).show()
+
+def compute_avarage(df, id):
+    df.withColumn("avg", lit(df.avg("btc_price"))).show()
+
+# write stream to console
+df_casted.writeStream \
+    .foreachBatch(compute_correlation) \
+    .trigger(processingTime='1 minute').start()
+
+df_casted.writeStream \
+    .foreachBatch(compute_avarage) \
+    .trigger(processingTime='1 minute').start()
+
+df_casted.selectExpr("to_json(struct(*)) AS value") \
+    .writeStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", KAFKA_BROKER) \
     .option("topic", "processed") \

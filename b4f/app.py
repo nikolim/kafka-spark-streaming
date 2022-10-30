@@ -18,17 +18,17 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 CORS(app)
 
 # use array to pass by reference
-data_dict = {"btc_price": 0, "hash_rate": 0}
+data_dict = { "btc_price": 0, "hash_rate": 0, "corr": 0}
 
 @socketio.on("message")
-def send_message(btc_price=data_dict['btc_price'], btc_hash_rate=data_dict['hash_rate']):
-    socketio.emit("btc", {'price': btc_price, 'hash_rate': btc_hash_rate})
+def send_message(btc_price=data_dict['btc_price'], btc_hash_rate=data_dict['hash_rate'], corr=data_dict['corr']):
+	socketio.emit("btc", {'price': btc_price, 'hash_rate': btc_hash_rate, 'corr': data_dict['corr']})
 
 def consume():
-    consumer = KafkaConsumer('processed', bootstrap_servers=KAFKA_BROKER)
-    for message in consumer:
-        data_obj = json.loads(str(message.value.decode('utf-8')).replace("\'", "\""))
-        send_message(btc_price=data_obj['btc_price'], btc_hash_rate=data_obj['hash_rate'])
+	consumer = KafkaConsumer('processed', bootstrap_servers=KAFKA_BROKER)
+	for message in consumer:
+		data_obj = json.loads(str(message.value.decode('utf-8')).replace("\'", "\""))
+		send_message(btc_price=data_obj['btc_price'], btc_hash_rate=data_obj['hash_rate'])
 
 consume_thread = Thread(target=consume)
 consume_thread.start()
@@ -37,11 +37,11 @@ consume_thread.start()
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
-    if path != "" and os.path.exists(app.static_folder + '/' + path):
-        return send_from_directory(app.static_folder, path)
-    else:
-        return send_from_directory(app.static_folder, 'index.html')
+	if path != "" and os.path.exists(app.static_folder + '/' + path):
+		return send_from_directory(app.static_folder, path)
+	else:
+		return send_from_directory(app.static_folder, 'index.html')
 
 
 if __name__ == '__main__':
-    socketio.run(app, debug=False, host='0.0.0.0')
+	socketio.run(app, debug=False, host='0.0.0.0')
