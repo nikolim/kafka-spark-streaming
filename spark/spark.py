@@ -21,45 +21,63 @@ conf.setAll(
 
 spark = SparkSession.builder.config(conf=conf).getOrCreate()
 
+schema = StructType().add('btc_price', DoubleType(), False).add('hash_rate', DoubleType(), False)
+
 # read stream from kafka broker
 df = spark \
     .readStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", KAFKA_BROKER) \
     .option("subscribe", "raw") \
-    .load()
+    .load() \
+    .selectExpr('CAST(value AS STRING)').select(from_json('value', schema).alias('temp')).select('temp.*')
+
 
 
 # to create a DF out of a json object, we need a schema 
 schema = StructType().add('btc_price', DoubleType(), False).add('hash_rate', DoubleType(), False)
-df_casted = df.selectExpr('CAST(value AS STRING)').select(from_json('value', schema).alias('temp')).select('temp.*')
+#df_casted = df.selectExpr('CAST(value AS STRING)').select(from_json('value', schema).alias('temp')).select('temp.*')
+df_new = df.select('*')
+#df_corr_json =   df_corr.selectExpr("to_json(struct(*)) AS value")
 
+print(type(df_new))
 
-print(type(df_casted))
+df_new.withColumn("corr", lit(df_new.corr("btc_price", "hash_rate"))).writeStream.format("console").start()
 # add col and calculate corr
 def compute_correlation(df, id):
     df_corr = df.withColumn("corr", lit(df.corr("btc_price", "hash_rate")))
 
     df_corr.selectExpr("to_json(struct(*)) AS value")
-    print(type(df_corr))
-    
-    query = df_corr.writeStream \
-    .format("kafka") \
-    .option("kafka.bootstrap.servers", KAFKA_BROKER) \
-    .option("topic", "processed") \
-    .option("checkpointLocation", "/tmp/checkpoint") \
-    .start()
 
-    query.awaitTermination()
-   
+
+
    
     # CONVERT BACK TO JSON HERE
    # df.select(to_json("corr".cast("string"), schema).alias("value"))
    # df.show()
+ # .foreachBatch(compute_correlation) \
+
+#query = df.withColumn("corr", lit(df.corr("btc_price", "hash_rate"))).selectExpr("to_json(struct(*)) AS value")
+
+#corr = df.withColumn("corr", lit(df.corr("btc_price", "hash_rate"))).selectExpr("to_json(struct(*)) AS value")
+    
+#query = df_casted.writeStream.foreachBatch(compute_correlation).format("console").start()
 
 
-df_casted.writeStream \
-   .foreachBatch(compute_correlation).start()
+   # .format("kafka") \
+   # .option("kafka.bootstrap.servers", KAFKA_BROKER) \
+   # .option("topic", "processed") \
+   # .option("checkpointLocation", "/tmp/checkpoint") \
+   # .start().awaitTermination()
+#query.awaitTermination()
+
+df.selectExpr("to_json(struct(*)) AS value") \
+    .writeStream \
+    .format("kafka") \
+    .option("kafka.bootstrap.servers", KAFKA_BROKER) \
+    .option("topic", "processed") \
+    .option("checkpointLocation", "/tmp/checkpoint") \
+    .start().awaitTermination()
 
 
 # return df with the avatage bitcoin price every 10 seconds
@@ -71,9 +89,9 @@ def compute_avarage(df, id):
 
     #resDF.select(to_json(struct($"battery_level", "c02_level")).alias("value"))
 
-df_casted.writeStream \
-    .foreachBatch(compute_avarage) \
-    .trigger(processingTime='10 seconds').start()
+#df_casted.writeStream \
+#    .foreachBatch(compute_avarage) \
+#    .trigger(processingTime='10 seconds').start()
   #  .format("kafka") \
   #  .option("kafka.bootstrap.servers", KAFKA_BROKER) \
   #  .option("topic", "processed") \
@@ -84,12 +102,7 @@ df_casted.writeStream \
 # write stream to other kafka topic (publish to broker)
 
 
-df.writeStream \
-    .format("kafka") \
-    .option("kafka.bootstrap.servers", KAFKA_BROKER) \
-    .option("topic", "processed") \
-    .option("checkpointLocation", "/tmp/checkpoint") \
-    .start().awaitTermination()
+
 
 ''''
  OLD CODE
