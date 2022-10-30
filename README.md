@@ -4,7 +4,7 @@
 
 ![architecture](architecture.png)
 
-## Deployment Setup 
+## Deployment Setup using Docker Compose
 
 ### Start 
 ```bash 
@@ -37,7 +37,7 @@ docker-compose restart -t 10 b4f
 
 ## Local Development Setup (Have a separate terminal for every step!)
 
-### 0.Virtual environment
+### 0. Virtual environment
 For development we can use a single virtual environment.
 ```bash 
 python3 -m venv venv 
@@ -47,12 +47,7 @@ source venv/bin/activate
 # to make sure the virtual environment is activated, check path of the python interpreter
 which python
 ```
-### 1.Kafka 
-*Optional: you might have to remove existing containers which are using zookeeper
-```bash 
-docker container ls -a
-docker rm <container-id>
-```
+### 1. Kafka 
 
 First start the kafka broker. Topics will be created automatically by the library.
 ```bash 
@@ -70,15 +65,15 @@ docker-compose down
 docker-compose restart
 ```
 
-### 2.Backend 
-First start the backend to fetch data from an API.
+### 2. Backend 
+Start the backend to fetch data from an API.
 ```bash 
 cd backend
 pip3 install -r requirements.txt
 python3 backend.py
 ```
 
-### 3.Spark
+### 3. Spark
 Consumes the "raw" topic from the backend, and publishes to the "processed" topic.
 ```bash 
 
@@ -91,7 +86,7 @@ pip3 install -r requirements.txt
 python3 spark.py
 ```
 
-### 4.Backend4Frontend
+### 4. Backend-4-Frontend
 Create flask server to consume the "processed" data and host the react frontend on http://localhost:5000.
 ```bash
 cd b4f
@@ -100,7 +95,7 @@ pip3 install -r requirements.txt
 python3 app.py
 ```
 
-### 5.Frontend
+### 5. Frontend
 For development you can use "yarn start" to get auto-reloading. If you want to hosted version via b4f, you have to build the project.
 ```bash
 cd b4f/fronend
